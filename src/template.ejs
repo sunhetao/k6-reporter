@@ -49,7 +49,7 @@
         color: #666;
         background: #ddd;
         font-weight: bold;
-        font-size: 1.2rem;
+        font-size: 0.8rem;
         flex: 1 1;
         transition: background ease 0.2s;
         border-top-left-radius: 0.3rem;
@@ -111,7 +111,7 @@
         z-index: 20;
       }
       table {
-        font-size: min(2vw, 22px);
+        font-size: min(2vw, 14px);
         width: 100%;
       }
       .icon { 
@@ -248,14 +248,25 @@
         <% 
           first = true 
           var sortedMetrics = {}
+          var trendMetrics = {}
+          var rateMetrics = {}
           Object.keys(data.metrics).sort().forEach(function(k) {
             sortedMetrics[k] = data.metrics[k]
           });
           for(metricName in sortedMetrics) {
             if(standardMetrics.includes(metricName) || otherMetrics.includes(metricName)) { continue }
-            var metric = sortedMetrics[metricName] 
+            if(sortedMetrics[metricName]['type']=='trend') {
+              trendMetrics[metricName] = sortedMetrics[metricName]
+            }
+            if(sortedMetrics[metricName]['type']=='rate') {
+              rateMetrics[metricName] = sortedMetrics[metricName]
+            }
+          }
+
+            // var metric = sortedMetrics[metricName] 
         %>
-          <% if(first) { first = false %> <h2>Custom Metrics</h2> 
+          <h2>Custom Metrics</h2> 
+          <h3>Trend Metrics</h3> 
           <table class="pure-table pure-table-striped">
             <tbody>
               <thead>
@@ -269,7 +280,10 @@
                   <th>95th Percentile</th>
                 </tr>
               </thead>
-              <% } %>
+              
+              <% for(metricName in trendMetrics) { 
+                var metric  = trendMetrics[metricName] 
+                %>
               <tr>
                 <td><b><%= metricName %></b></td>
                 
@@ -310,6 +324,53 @@
                 <% } %>
               </tr>
               <% } %>
+
+            </tbody>
+          </table>
+          <br>
+
+          <h3>Rate Metrics</h3> 
+          <table class="pure-table pure-table-striped">
+            <tbody>
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Passes</th>
+                  <th>Failures</th>
+                  <th>Rate</th> 
+                  <th>Thresholds</th> 
+                </tr>
+              </thead>
+              
+              <% for(metricName in rateMetrics) { 
+                var metric  = rateMetrics[metricName] 
+                %>
+              <tr>
+                <td><b><%= metricName %></b></td>
+                
+                <td><%= metric.values.passes %></td>
+
+                <td><%= metric.values.fails %></td>
+
+                <td><%= metric.values.rate*100 %>%</td>
+
+                <td style="padding: 0;">
+                    <table class="pure-table">
+                    <% for(threshold in metric.thresholds) { 
+                      var result;
+                      if ( metric.thresholds[threshold]['ok']){
+                        result = 'good'
+                      }else{
+                        result = 'failed'
+                      }
+                      %>
+                      <tr><td class="<%= result %>"> <%= threshold %> </td></tr>
+                      <% } %>
+                    </table>
+                </td>
+              </tr>
+              <% } %>
+
             </tbody>
           </table>
           <br>
